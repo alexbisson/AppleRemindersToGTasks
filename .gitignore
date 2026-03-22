@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Google auth — never commit these
+credentials.json
+token.json
+
+# Runtime state — machine-specific
+state.json
+
+# User config — copy from config.example.json
+config.json
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Local assistant configuration
+.claude/
+
+__pycache__/
+  *.pyc
