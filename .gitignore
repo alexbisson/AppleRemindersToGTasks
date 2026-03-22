@@ -23,5 +23,3 @@ config.json
 # Local assistant configuration
 .claude/
 
-__pycache__/
-  *.pyc

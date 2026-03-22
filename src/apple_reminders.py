@@ -121,11 +121,9 @@ def fetch_reminders(list_names: list[str]) -> list[Reminder]:
     done = threading.Event()
     raw: list = []
 
-    def _completion(reminders, error) -> None:
+    def _completion(reminders) -> None:
         if reminders:
             raw.extend(reminders)
-        if error:
-            log.error("EventKit fetch error: %s", error)
         done.set()
 
     store.fetchRemindersMatchingPredicate_completion_(predicate, _completion)

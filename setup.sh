@@ -49,13 +49,13 @@ info "Dependencies installed."
 
 # ── Read poll interval from config ────────────────────────────────────────
 
-INTERVAL_SECS=$("$PYTHON" - <<'EOF'
-import json, sys
-with open(sys.argv[1]) as f:
+INTERVAL_SECS=$(CONFIG_PATH="$SCRIPT_DIR/config.json" "$PYTHON" - <<'EOF'
+import json, os
+with open(os.environ["CONFIG_PATH"]) as f:
     c = json.load(f)
 print(int(float(c.get("poll_interval_minutes", 10)) * 60))
 EOF
-"$SCRIPT_DIR/config.json")
+)
 
 info "Poll interval: $((INTERVAL_SECS / 60)) minute(s) (${INTERVAL_SECS}s)"
 
