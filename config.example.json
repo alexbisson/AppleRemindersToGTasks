@@ -1,0 +1,6 @@
+{
+  "apple_lists": ["Reminders"],
+  "google_tasks_list": "WallCal",
+  "poll_interval_minutes": 10,
+  "log_level": "INFO"
+}
