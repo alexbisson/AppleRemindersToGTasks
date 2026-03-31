@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Apple Reminders → Google Tasks Sync</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      line-height: 1.6;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e5;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin-top: 6px;
+      color: #6e6e73;
+      font-size: 0.95rem;
+    }
+
+    main {
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1d1d1f;
+    }
+
+    .card p, .card li {
+      color: #3a3a3c;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .card p:last-child { margin-bottom: 0; }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 4px;
+    }
+
+    ul li {
+      margin-bottom: 6px;
+    }
+
+    .updated {
+      font-size: 0.85rem;
+      color: #6e6e73;
+      margin-bottom: 28px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: #6e6e73;
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: #0071e3;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Privacy Policy</h1>
+    <p>Apple Reminders → Google Tasks Sync</p>
+  </header>
+
+  <main>
+
+    <p class="updated">Last updated: March 31, 2026</p>
+
+    <div class="card">
+      <h2>Overview</h2>
+      <p>
+        Apple Reminders → Google Tasks Sync ("the application") is a personal, single-user
+        macOS utility developed and operated by Alex Bisson solely for personal use.
+        It is not a commercial product and has no end users other than its developer.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Data collected and processed</h2>
+      <p>The application accesses the following data exclusively on the owner's device:</p>
+      <ul>
+        <li><strong>Apple Reminders:</strong> reminder titles, notes, and due dates from the configured list(s).</li>
+        <li><strong>Google Tasks:</strong> task titles, notes, due dates, and completion status in the configured Google Tasks list.</li>
+      </ul>
+      <p>
+        This data is read and written solely to perform the sync between the two services.
+        No data is stored beyond what is already present in Apple Reminders and Google Tasks.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Data sharing</h2>
+      <p>
+        No personal data is shared with any third party. All processing occurs locally on
+        the owner's Mac. The only external communication is with Google's APIs, which is
+        necessary to read and write tasks in the owner's own Google Tasks account.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Google API scopes used</h2>
+      <p>The application requests the following OAuth scope:</p>
+      <ul>
+        <li>
+          <code>https://www.googleapis.com/auth/tasks</code> —
+          used to create, update, and complete tasks in the owner's Google Tasks account.
+        </li>
+      </ul>
+      <p>
+        Access tokens are stored locally in a <code>token.json</code> file on the owner's
+        machine and are never transmitted to any server other than Google's OAuth endpoints.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Data retention</h2>
+      <p>
+        The application does not retain any personal data beyond what exists natively in
+        Apple Reminders and Google Tasks. A local <code>state.json</code> file stores a
+        mapping of reminder IDs to Google Task IDs for sync tracking purposes only; it
+        contains no personal content.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Contact</h2>
+      <p>
+        This application is for personal use only. For questions, refer to the
+        <a href="https://github.com/alexbisson/AppleRemindersToGTasks" target="_blank" rel="noopener">source code on GitHub</a>.
+      </p>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>
+      &copy; 2026 Alex Bisson &mdash;
+      <a href="index.html">Back to home</a>
+    </p>
+  </footer>
+
+</body>
+</html>
