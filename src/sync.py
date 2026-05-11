@@ -55,11 +55,23 @@ def run_sync(config: dict) -> None:
     list_id = gtasks.find_list_id(gtasks_list)
     log.info("Target Google Tasks list: '%s' (%s)", gtasks_list, list_id)
 
-    created = updated = completed_count = 0
+    created = updated = skipped = completed_count = 0
+
+    # Cache maps apple_id → {"title": ..., "notes": ..., "due": ...} of last pushed state.
+    cache: dict[str, dict] = state.setdefault("cache", {})
+
+    def _reminder_cache_entry(r) -> dict:
+        return {"title": r.title, "notes": r.notes, "due": str(r.due)}
 
     # 4. Upsert: for every reminder currently in Apple, create or update in Google Tasks
     for reminder in reminders:
         if reminder.apple_id in mappings:
+            cached = cache.get(reminder.apple_id)
+            current = _reminder_cache_entry(reminder)
+            if cached == current:
+                log.debug("Skipping unchanged: %r", reminder.title)
+                skipped += 1
+                continue
             try:
                 log.debug("Updating: %r", reminder.title)
                 gtasks.update_task(
@@ -69,6 +81,7 @@ def run_sync(config: dict) -> None:
                     reminder.notes,
                     reminder.due,
                 )
+                cache[reminder.apple_id] = current
                 updated += 1
             except TaskNotFoundError:
                 # Task was deleted in Google Tasks — drop the stale mapping and recreate.
@@ -78,6 +91,7 @@ def run_sync(config: dict) -> None:
                     list_id, reminder.title, reminder.notes, reminder.due
                 )
                 mappings[reminder.apple_id] = gtask_id
+                cache[reminder.apple_id] = current
                 created += 1
         else:
             log.info("Creating: %r", reminder.title)
@@ -85,6 +99,7 @@ def run_sync(config: dict) -> None:
                 list_id, reminder.title, reminder.notes, reminder.due
             )
             mappings[reminder.apple_id] = gtask_id
+            cache[reminder.apple_id] = _reminder_cache_entry(reminder)
             created += 1
 
     # 5. Complete: for every tracked reminder that has disappeared from Apple
@@ -92,6 +107,7 @@ def run_sync(config: dict) -> None:
     stale = [aid for aid in list(mappings) if aid not in apple_index]
     for apple_id in stale:
         gtask_id = mappings.pop(apple_id)
+        cache.pop(apple_id, None)
         log.info("Completing removed reminder — Google Task id: %s", gtask_id)
         gtasks.complete_task(list_id, gtask_id)
         completed_count += 1
@@ -101,8 +117,9 @@ def run_sync(config: dict) -> None:
     _save_state(state)
 
     log.info(
-        "Sync complete — created: %d  updated: %d  completed: %d",
+        "Sync complete — created: %d  updated: %d  skipped: %d  completed: %d",
         created,
         updated,
+        skipped,
         completed_count,
     )
