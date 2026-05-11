@@ -22,6 +22,10 @@ class TaskNotFoundError(Exception):
     """Raised when a Google Task ID no longer exists (e.g. deleted manually)."""
 
 
+class QuotaExceededError(Exception):
+    """Raised when the Google Tasks API daily quota is exhausted."""
+
+
 class GoogleTasksClient:
     def __init__(self, credentials_path: Path, token_path: Path) -> None:
         self.credentials_path = credentials_path
@@ -97,7 +101,12 @@ class GoogleTasksClient:
         if due is not None:
             body["due"] = _format_due(due)
 
-        task = self.service.tasks().insert(tasklist=list_id, body=body).execute()
+        try:
+            task = self.service.tasks().insert(tasklist=list_id, body=body).execute()
+        except HttpError as exc:
+            if exc.resp.status == 403 and b"quotaExceeded" in exc.content:
+                raise QuotaExceededError() from exc
+            raise
         log.debug("Created Google Task id=%s title=%r", task["id"], title)
         return task["id"]
 
@@ -130,6 +139,8 @@ class GoogleTasksClient:
                     task_id,
                 )
                 raise TaskNotFoundError(task_id)
+            if exc.resp.status == 403 and b"quotaExceeded" in exc.content:
+                raise QuotaExceededError() from exc
             raise
 
     def complete_task(self, list_id: str, task_id: str) -> None:

@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .apple_reminders import fetch_reminders
-from .google_tasks import GoogleTasksClient, TaskNotFoundError
+from .google_tasks import GoogleTasksClient, QuotaExceededError, TaskNotFoundError
 
 log = logging.getLogger(__name__)
 
@@ -63,11 +63,21 @@ def run_sync(config: dict) -> None:
     def _reminder_cache_entry(r) -> dict:
         return {"title": r.title, "notes": r.notes, "due": str(r.due)}
 
+    quota_hit = False
+
     # 4. Upsert: for every reminder currently in Apple, create or update in Google Tasks
     for reminder in reminders:
         if reminder.apple_id in mappings:
-            cached = cache.get(reminder.apple_id)
             current = _reminder_cache_entry(reminder)
+            cached = cache.get(reminder.apple_id)
+            if cached is None:
+                # No cache entry means this is the first run after the cache was introduced
+                # (or state.json was reset). Assume Google Tasks is already in sync and seed
+                # the cache, so we don't push all reminders at once and exhaust the quota.
+                log.debug("Seeding cache (no prior entry): %r", reminder.title)
+                cache[reminder.apple_id] = current
+                skipped += 1
+                continue
             if cached == current:
                 log.debug("Skipping unchanged: %r", reminder.title)
                 skipped += 1
@@ -87,20 +97,40 @@ def run_sync(config: dict) -> None:
                 # Task was deleted in Google Tasks — drop the stale mapping and recreate.
                 log.info("Recreating manually deleted task: %r", reminder.title)
                 del mappings[reminder.apple_id]
-                gtask_id = gtasks.create_task(
-                    list_id, reminder.title, reminder.notes, reminder.due
-                )
+                try:
+                    gtask_id = gtasks.create_task(
+                        list_id, reminder.title, reminder.notes, reminder.due
+                    )
+                except QuotaExceededError:
+                    quota_hit = True
+                    break
                 mappings[reminder.apple_id] = gtask_id
                 cache[reminder.apple_id] = current
                 created += 1
+            except QuotaExceededError:
+                quota_hit = True
+                break
         else:
             log.info("Creating: %r", reminder.title)
-            gtask_id = gtasks.create_task(
-                list_id, reminder.title, reminder.notes, reminder.due
-            )
+            try:
+                gtask_id = gtasks.create_task(
+                    list_id, reminder.title, reminder.notes, reminder.due
+                )
+            except QuotaExceededError:
+                quota_hit = True
+                break
             mappings[reminder.apple_id] = gtask_id
             cache[reminder.apple_id] = _reminder_cache_entry(reminder)
             created += 1
+
+    if quota_hit:
+        log.warning(
+            "Google Tasks API daily quota exhausted — sync partially complete "
+            "(created: %d  updated: %d). Remaining reminders will sync tomorrow "
+            "when the quota resets, or increase your quota in the Google Cloud Console.",
+            created,
+            updated,
+        )
 
     # 5. Complete: for every tracked reminder that has disappeared from Apple
     #    (deleted or completed there), mark it as completed in Google Tasks.
