@@ -120,14 +120,26 @@ def fetch_reminders(list_names: list[str]) -> list[Reminder]:
 
     done = threading.Event()
     raw: list = []
+    fetch_error: dict = {}
 
     def _completion(reminders) -> None:
-        if reminders:
+        if reminders is None:
+            # nil means EventKit encountered an error (e.g. auth revoked mid-run),
+            # not that the list is empty. Treat it as fatal so the caller doesn't
+            # mistake it for "no incomplete reminders" and complete all Google Tasks.
+            fetch_error["occurred"] = True
+        else:
             raw.extend(reminders)
         done.set()
 
     store.fetchRemindersMatchingPredicate_completion_(predicate, _completion)
     _spin_until(done)
+
+    if fetch_error:
+        raise RuntimeError(
+            "EventKit returned nil for the reminders fetch — this usually means "
+            "Reminders access was revoked. Check System Settings → Privacy & Security → Reminders."
+        )
 
     results: list[Reminder] = []
     for r in raw:
